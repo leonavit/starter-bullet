@@ -20,6 +20,10 @@ $header_classes       = array(
 	'text-white',
 	$transparent_header ? 'site-header--transparent' : 'site-header--solid',
 );
+
+if ( 'hide' === sb_get_site_option( 'header_nav_effect', sb_get_site_option( 'header_bg_visible', 'show' ) ) ) {
+	$header_classes[] = 'site-header--nav-effect-hidden';
+}
 ?>
 
 <header id="site-header" class="<?php echo esc_attr( implode( ' ', $header_classes ) ); ?>">

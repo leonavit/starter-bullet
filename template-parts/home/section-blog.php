@@ -20,16 +20,17 @@ $query = new WP_Query(
 
 $shown = $query->have_posts() ? min( $count, (int) $query->post_count ) : 3;
 
-// Grid adapts to the number of displayed posts so cards fill the full width.
+// Mobile: snap carousel. From md up: grid adapts to post count.
+$grid_classes = 'sb-snap-carousel -mx-4 px-4 md:mx-0 md:px-0';
 if ( 1 === $shown ) {
-	$grid_classes = 'mx-auto grid max-w-xl gap-8';
+	$grid_classes .= ' md:mx-auto md:max-w-xl';
 } elseif ( 2 === $shown ) {
-	$grid_classes = 'grid gap-8 md:grid-cols-2';
+	$grid_classes .= ' md:grid-cols-2';
 } else {
-	$grid_classes = 'grid gap-8 md:grid-cols-2 lg:grid-cols-3';
+	$grid_classes .= ' md:grid-cols-2 lg:grid-cols-3';
 }
 ?>
-<section class="bg-white py-16 lg:py-20">
+<section class="bg-white py-16 lg:py-20"<?php echo sb_section_bg_style( 'blog' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 	<div class="mx-auto max-w-7xl px-4 lg:px-8">
 		<div class="sb-section mb-12 text-center" data-skeleton>
 			<h2 class="text-3xl font-extrabold text-navy sm:text-4xl"><?php echo esc_html( (string) $d['title'] ); ?></h2>

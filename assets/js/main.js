@@ -172,6 +172,60 @@ function initCf7FormErrors() {
 	});
 }
 
+function initStatsCounter() {
+	const numbers = document.querySelectorAll('.sb-stat-number');
+	if (!numbers.length || !('IntersectionObserver' in window)) return;
+
+	const animate = (el) => {
+		const original = el.textContent.trim();
+		// Split into prefix / numeric part / suffix, e.g. "25K+" -> "", "25", "K+".
+		const match = original.match(/^([^\d]*)(\d+(?:[.,]\d+)?)(.*)$/);
+		if (!match) return;
+
+		const prefix = match[1];
+		const raw = match[2];
+		const suffix = match[3];
+		const target = parseFloat(raw.replace(',', '.'));
+		if (!isFinite(target) || target <= 0) return;
+
+		const decimals = (raw.split(/[.,]/)[1] || '').length;
+		const start = target * 2;
+		const duration = 2000;
+		let startTime = null;
+
+		const step = (now) => {
+			if (startTime === null) startTime = now;
+			const progress = Math.min((now - startTime) / duration, 1);
+			const eased = 1 - Math.pow(1 - progress, 3);
+			const value = start - (start - target) * eased;
+
+			el.textContent = prefix + value.toFixed(decimals) + suffix;
+
+			if (progress < 1) {
+				window.requestAnimationFrame(step);
+			} else {
+				el.textContent = original;
+			}
+		};
+
+		window.requestAnimationFrame(step);
+	};
+
+	const observer = new IntersectionObserver(
+		(entries) => {
+			entries.forEach((entry) => {
+				if (entry.isIntersecting) {
+					animate(entry.target);
+					observer.unobserve(entry.target);
+				}
+			});
+		},
+		{ threshold: 0.4 }
+	);
+
+	numbers.forEach((el) => observer.observe(el));
+}
+
 document.addEventListener('DOMContentLoaded', () => {
 	initMobileMenu();
 	initSkeletons();
@@ -180,4 +234,5 @@ document.addEventListener('DOMContentLoaded', () => {
 	initTransparentHeader();
 	initMobileSubmenus();
 	initCf7FormErrors();
+	initStatsCounter();
 });

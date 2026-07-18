@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 $d = sb_get_section( 'about' );
 ?>
-<section id="about" class="bg-white py-16 lg:py-20">
+<section id="about" class="bg-white py-16 lg:py-20"<?php echo sb_section_bg_style( 'about' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 	<div class="mx-auto grid max-w-7xl items-center gap-10 px-4 lg:grid-cols-2 lg:px-8">
 		<div class="sb-section order-2 lg:order-1" data-skeleton>
 			<?php sb_render_image( (int) $d['image_id'], (string) $d['title'], 'w-full rounded-2xl object-cover shadow-lg' ); ?>

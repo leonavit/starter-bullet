@@ -1,6 +1,12 @@
 </main>
 
-<?php if ( sb_section_enabled( 'cta' ) ) : ?>
+<?php
+$show_cta = sb_section_enabled( 'cta' );
+if ( $show_cta && ! empty( sb_get_section( 'cta', 'home_only' ) ) && ! is_front_page() ) {
+	$show_cta = false;
+}
+?>
+<?php if ( $show_cta ) : ?>
 	<?php get_template_part( 'template-parts/home/section', 'cta' ); ?>
 <?php endif; ?>
 

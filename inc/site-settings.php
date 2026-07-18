@@ -18,12 +18,16 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function starter_bullet_default_site_settings(): array {
 	return array(
+		'logo_transparent'       => 0,
+		'logo_scrolled'          => 0,
 		'brand_icon_transparent' => 0,
 		'brand_icon_scrolled'    => 0,
+		'favicon_id'             => 0,
 		'page_default_image_id'  => 0,
 		'header_phone'           => '03-1234567',
 		'header_style'      => 'transparent',
 		'header_bg_color'   => '#1A1D2E',
+		'header_nav_effect' => 'show',
 		'form_title'        => 'קבלו הצעת מחיר חינם',
 		'mobile_menu_style' => 'overlay',
 		'font_family'       => 'Assistant',
@@ -119,8 +123,11 @@ function starter_bullet_sanitize_site_settings( array $input ): array {
 
 	$output['header_phone'] = sanitize_text_field( $input['header_phone'] ?? $defaults['header_phone'] );
 	$output['form_title']   = sanitize_text_field( $input['form_title'] ?? $defaults['form_title'] );
+	$output['logo_transparent']       = absint( $input['logo_transparent'] ?? $defaults['logo_transparent'] );
+	$output['logo_scrolled']          = absint( $input['logo_scrolled'] ?? $defaults['logo_scrolled'] );
 	$output['brand_icon_transparent'] = absint( $input['brand_icon_transparent'] ?? $defaults['brand_icon_transparent'] );
 	$output['brand_icon_scrolled']    = absint( $input['brand_icon_scrolled'] ?? $defaults['brand_icon_scrolled'] );
+	$output['favicon_id']             = absint( $input['favicon_id'] ?? $defaults['favicon_id'] );
 	$output['page_default_image_id']  = absint( $input['page_default_image_id'] ?? $defaults['page_default_image_id'] );
 
 	$output['header_style'] = in_array( $input['header_style'] ?? '', array( 'transparent', 'solid' ), true )
@@ -129,6 +136,10 @@ function starter_bullet_sanitize_site_settings( array $input ): array {
 
 	$header_color = sanitize_hex_color( (string) ( $input['header_bg_color'] ?? $defaults['header_bg_color'] ) );
 	$output['header_bg_color'] = $header_color ? $header_color : '#1A1D2E';
+
+	$output['header_nav_effect'] = in_array( $input['header_nav_effect'] ?? $input['header_bg_visible'] ?? '', array( 'show', 'hide' ), true )
+		? ( $input['header_nav_effect'] ?? $input['header_bg_visible'] )
+		: 'show';
 
 	$output['whatsapp_number'] = sanitize_text_field( $input['whatsapp_number'] ?? '' );
 	$output['whatsapp_position'] = in_array( $input['whatsapp_position'] ?? '', array( 'bottom-right', 'bottom-left' ), true )
@@ -143,23 +154,23 @@ function starter_bullet_sanitize_site_settings( array $input ): array {
  */
 function starter_bullet_register_admin_menus(): void {
 	add_menu_page(
-		esc_html__( 'הגדרות כלליות לאתר', 'starter-bullet' ),
-		esc_html__( 'הגדרות כלליות לאתר', 'starter-bullet' ),
-		'manage_options',
-		'starter-bullet-site',
-		'starter_bullet_site_settings_page_html',
-		'dashicons-admin-settings',
-		29
-	);
-
-	add_menu_page(
 		esc_html__( 'הגדרות עמוד בית', 'starter-bullet' ),
 		esc_html__( 'הגדרות עמוד בית', 'starter-bullet' ),
 		'manage_options',
 		'starter-bullet-home',
 		'starter_bullet_home_settings_page_html',
 		'dashicons-admin-generic',
-		30
+		28.1
+	);
+
+	add_menu_page(
+		esc_html__( 'הגדרות כלליות לאתר', 'starter-bullet' ),
+		esc_html__( 'הגדרות כלליות לאתר', 'starter-bullet' ),
+		'manage_options',
+		'starter-bullet-site',
+		'starter_bullet_site_settings_page_html',
+		'dashicons-admin-settings',
+		28.2
 	);
 }
 add_action( 'admin_menu', 'starter_bullet_register_admin_menus' );
@@ -181,9 +192,34 @@ function starter_bullet_site_settings_page_html(): void {
 		<form method="post" action="options.php">
 			<?php settings_fields( 'starter_bullet_site' ); ?>
 
+			<div style="display:flex;align-items:center;gap:8px;margin-top:16px;">
+				<?php submit_button( esc_html__( 'שמור שינויים', 'starter-bullet' ), 'primary', 'submit-top', false ); ?>
+				<span style="margin-inline-start:auto;display:inline-flex;gap:8px;">
+					<button type="button" class="button sb-sections-collapse-all"><?php esc_html_e( 'סגור הכל', 'starter-bullet' ); ?></button>
+					<button type="button" class="button sb-sections-expand-all"><?php esc_html_e( 'פתח הכל', 'starter-bullet' ); ?></button>
+				</span>
+			</div>
+
 			<div class="postbox" style="margin-top:20px;padding:16px;">
-				<h2><?php esc_html_e( 'לוגו', 'starter-bullet' ); ?></h2>
-				<table class="form-table">
+				<h2 style="margin-top:0;display:flex;align-items:center;gap:12px;">
+					<?php esc_html_e( 'לוגו', 'starter-bullet' ); ?>
+					<button type="button" class="button sb-section-toggle" aria-expanded="false" title="<?php esc_attr_e( 'קפל / פתח סקשן', 'starter-bullet' ); ?>" style="margin-inline-start:auto;width:30px;height:30px;padding:0;font-size:18px;line-height:1;font-weight:700;">+</button>
+				</h2>
+				<table class="form-table" style="display:none;">
+					<tr>
+						<th><?php esc_html_e( 'לוגו מלא — בר שקוף', 'starter-bullet' ); ?></th>
+						<td>
+							<?php starter_bullet_render_site_image_field( 'logo_transparent', (int) ( $s['logo_transparent'] ?? 0 ) ); ?>
+							<p class="description"><?php esc_html_e( 'לוגו מלא (תמונה עם שם העסק). כשמוגדר — מחליף את הסמל + שם האתר בטקסט. מוצג כשהבר שקוף.', 'starter-bullet' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th><?php esc_html_e( 'לוגו מלא — בר כהה', 'starter-bullet' ); ?></th>
+						<td>
+							<?php starter_bullet_render_site_image_field( 'logo_scrolled', (int) ( $s['logo_scrolled'] ?? 0 ) ); ?>
+							<p class="description"><?php esc_html_e( 'מוצג אחרי גלילה או כשהבר במצב מלא/כהה. אם ריק — ישמש הלוגו של הבר השקוף.', 'starter-bullet' ); ?></p>
+						</td>
+					</tr>
 					<tr>
 						<th><?php esc_html_e( 'אייקון — בר שקוף', 'starter-bullet' ); ?></th>
 						<td>
@@ -198,12 +234,22 @@ function starter_bullet_site_settings_page_html(): void {
 							<p class="description"><?php esc_html_e( 'מוצג אחרי גלילה או כשהבר במצב מלא/כהה.', 'starter-bullet' ); ?></p>
 						</td>
 					</tr>
+					<tr>
+						<th><?php esc_html_e( 'סמל האתר (Favicon)', 'starter-bullet' ); ?></th>
+						<td>
+							<?php starter_bullet_render_site_image_field( 'favicon_id', (int) ( $s['favicon_id'] ?? 0 ) ); ?>
+							<p class="description"><?php esc_html_e( 'מוצג בטאב הדפדפן ובמועדפים. מומלץ תמונה ריבועית בגודל 512×512 פיקסלים.', 'starter-bullet' ); ?></p>
+						</td>
+					</tr>
 				</table>
 			</div>
 
 			<div class="postbox" style="margin-top:20px;padding:16px;">
-				<h2><?php esc_html_e( 'עמודים', 'starter-bullet' ); ?></h2>
-				<table class="form-table">
+				<h2 style="margin-top:0;display:flex;align-items:center;gap:12px;">
+					<?php esc_html_e( 'עמודים', 'starter-bullet' ); ?>
+					<button type="button" class="button sb-section-toggle" aria-expanded="false" title="<?php esc_attr_e( 'קפל / פתח סקשן', 'starter-bullet' ); ?>" style="margin-inline-start:auto;width:30px;height:30px;padding:0;font-size:18px;line-height:1;font-weight:700;">+</button>
+				</h2>
+				<table class="form-table" style="display:none;">
 					<tr>
 						<th><?php esc_html_e( 'תמונה ראשית — ברירת מחדל', 'starter-bullet' ); ?></th>
 						<td>
@@ -215,8 +261,11 @@ function starter_bullet_site_settings_page_html(): void {
 			</div>
 
 			<div class="postbox" style="margin-top:20px;padding:16px;">
-				<h2><?php esc_html_e( 'בר עליון', 'starter-bullet' ); ?></h2>
-				<table class="form-table">
+				<h2 style="margin-top:0;display:flex;align-items:center;gap:12px;">
+					<?php esc_html_e( 'בר עליון', 'starter-bullet' ); ?>
+					<button type="button" class="button sb-section-toggle" aria-expanded="false" title="<?php esc_attr_e( 'קפל / פתח סקשן', 'starter-bullet' ); ?>" style="margin-inline-start:auto;width:30px;height:30px;padding:0;font-size:18px;line-height:1;font-weight:700;">+</button>
+				</h2>
+				<table class="form-table" style="display:none;">
 					<tr>
 						<th><?php esc_html_e( 'סוג Header', 'starter-bullet' ); ?></th>
 						<td>
@@ -233,6 +282,18 @@ function starter_bullet_site_settings_page_html(): void {
 						</td>
 					</tr>
 					<tr>
+						<th><?php esc_html_e( 'אפקט רקע לתפריט', 'starter-bullet' ); ?></th>
+						<td>
+							<?php
+							$nav_effect = (string) ( $s['header_nav_effect'] ?? $s['header_bg_visible'] ?? 'show' );
+							$nav_effect = ( 'hide' === $nav_effect ) ? 'hide' : 'show';
+							?>
+							<label><input type="radio" name="starter_bullet_site_settings[header_nav_effect]" value="show" <?php checked( 'show', $nav_effect ); ?>> <?php esc_html_e( 'חשוף — גלולה שקופה עם טשטוש מאחורי התפריט', 'starter-bullet' ); ?></label><br>
+							<label><input type="radio" name="starter_bullet_site_settings[header_nav_effect]" value="hide" <?php checked( 'hide', $nav_effect ); ?>> <?php esc_html_e( 'מוסתר — בלי רקע על התפריט האמצעי', 'starter-bullet' ); ?></label>
+							<p class="description"><?php esc_html_e( 'שולט רק באפקט הרקע של תפריט הניווט באמצע הבר, לא ברקע של כל הבר.', 'starter-bullet' ); ?></p>
+						</td>
+					</tr>
+					<tr>
 						<th><?php esc_html_e( 'מספר טלפון (כפתור צהוב)', 'starter-bullet' ); ?></th>
 						<td>
 							<input type="text" name="starter_bullet_site_settings[header_phone]" value="<?php echo esc_attr( (string) $s['header_phone'] ); ?>" class="regular-text" placeholder="03-1234567">
@@ -243,8 +304,11 @@ function starter_bullet_site_settings_page_html(): void {
 			</div>
 
 			<div class="postbox" style="margin-top:20px;padding:16px;">
-				<h2><?php esc_html_e( 'טופס יצירת קשר', 'starter-bullet' ); ?></h2>
-				<table class="form-table">
+				<h2 style="margin-top:0;display:flex;align-items:center;gap:12px;">
+					<?php esc_html_e( 'טופס יצירת קשר', 'starter-bullet' ); ?>
+					<button type="button" class="button sb-section-toggle" aria-expanded="false" title="<?php esc_attr_e( 'קפל / פתח סקשן', 'starter-bullet' ); ?>" style="margin-inline-start:auto;width:30px;height:30px;padding:0;font-size:18px;line-height:1;font-weight:700;">+</button>
+				</h2>
+				<table class="form-table" style="display:none;">
 					<tr>
 						<th><?php esc_html_e( 'כותרת ראשית של הטופס', 'starter-bullet' ); ?></th>
 						<td>
@@ -256,8 +320,11 @@ function starter_bullet_site_settings_page_html(): void {
 			</div>
 
 			<div class="postbox" style="margin-top:20px;padding:16px;">
-				<h2><?php esc_html_e( 'תפריט מובייל', 'starter-bullet' ); ?></h2>
-				<table class="form-table">
+				<h2 style="margin-top:0;display:flex;align-items:center;gap:12px;">
+					<?php esc_html_e( 'תפריט מובייל', 'starter-bullet' ); ?>
+					<button type="button" class="button sb-section-toggle" aria-expanded="false" title="<?php esc_attr_e( 'קפל / פתח סקשן', 'starter-bullet' ); ?>" style="margin-inline-start:auto;width:30px;height:30px;padding:0;font-size:18px;line-height:1;font-weight:700;">+</button>
+				</h2>
+				<table class="form-table" style="display:none;">
 					<tr>
 						<th><?php esc_html_e( 'סגנון פתיחה', 'starter-bullet' ); ?></th>
 						<td>
@@ -269,8 +336,11 @@ function starter_bullet_site_settings_page_html(): void {
 			</div>
 
 			<div class="postbox" style="margin-top:20px;padding:16px;">
-				<h2><?php esc_html_e( 'גודל פונטים', 'starter-bullet' ); ?></h2>
-				<table class="form-table">
+				<h2 style="margin-top:0;display:flex;align-items:center;gap:12px;">
+					<?php esc_html_e( 'גודל פונטים', 'starter-bullet' ); ?>
+					<button type="button" class="button sb-section-toggle" aria-expanded="false" title="<?php esc_attr_e( 'קפל / פתח סקשן', 'starter-bullet' ); ?>" style="margin-inline-start:auto;width:30px;height:30px;padding:0;font-size:18px;line-height:1;font-weight:700;">+</button>
+				</h2>
+				<table class="form-table" style="display:none;">
 					<tr>
 						<th><?php esc_html_e( 'משפחת פונטים', 'starter-bullet' ); ?></th>
 						<td>
@@ -304,8 +374,11 @@ function starter_bullet_site_settings_page_html(): void {
 			</div>
 
 			<div class="postbox" style="margin-top:20px;padding:16px;">
-				<h2><?php esc_html_e( 'הגדרות WhatsApp', 'starter-bullet' ); ?></h2>
-				<table class="form-table">
+				<h2 style="margin-top:0;display:flex;align-items:center;gap:12px;">
+					<?php esc_html_e( 'הגדרות WhatsApp', 'starter-bullet' ); ?>
+					<button type="button" class="button sb-section-toggle" aria-expanded="false" title="<?php esc_attr_e( 'קפל / פתח סקשן', 'starter-bullet' ); ?>" style="margin-inline-start:auto;width:30px;height:30px;padding:0;font-size:18px;line-height:1;font-weight:700;">+</button>
+				</h2>
+				<table class="form-table" style="display:none;">
 					<tr>
 						<th><?php esc_html_e( 'מספר נייד', 'starter-bullet' ); ?></th>
 						<td><input type="text" name="starter_bullet_site_settings[whatsapp_number]" value="<?php echo esc_attr( (string) $s['whatsapp_number'] ); ?>" class="regular-text" placeholder="972501234567"></td>
@@ -461,7 +534,16 @@ function starter_bullet_output_dynamic_styles(): void {
 		footer .sb-footer-info__subtitle{font-size:var(--sb-font-p);}
 		.sb-nav-primary > li > a{font-size:var(--sb-font-menu);}
 		.sb-cta,.sb-btn-cta,input[type=submit].btn-send{font-size:var(--sb-font-cta);}
-		.site-header--solid{background-color:var(--sb-header-bg);}',
+		.site-header--solid{background-color:var(--sb-header-bg);}
+		body.sb-header-nav-effect-hidden .site-header--transparent .primary-nav .sb-nav-primary,
+		body.sb-header-nav-effect-hidden .primary-nav .sb-nav-primary,
+		.site-header--nav-effect-hidden .primary-nav .sb-nav-primary{
+			background:transparent!important;
+			background-color:transparent!important;
+			backdrop-filter:none!important;
+			-webkit-backdrop-filter:none!important;
+			box-shadow:none!important;
+		}',
 		esc_attr( (string) $s['font_family'] ),
 		(int) $s['font_menu'],
 		(int) $s['font_h1'],
@@ -478,6 +560,29 @@ function starter_bullet_output_dynamic_styles(): void {
 add_action( 'wp_enqueue_scripts', 'starter_bullet_output_dynamic_styles', 20 );
 
 /**
+ * Output favicon link tags from the uploaded favicon setting.
+ */
+function starter_bullet_output_favicon(): void {
+	$favicon_id = (int) sb_get_site_option( 'favicon_id', 0 );
+
+	if ( $favicon_id <= 0 ) {
+		return;
+	}
+
+	$url = wp_get_attachment_image_url( $favicon_id, 'full' );
+
+	if ( ! $url ) {
+		return;
+	}
+
+	printf( '<link rel="icon" href="%s">' . "\n", esc_url( $url ) );
+	printf( '<link rel="apple-touch-icon" href="%s">' . "\n", esc_url( $url ) );
+}
+add_action( 'wp_head', 'starter_bullet_output_favicon', 5 );
+add_action( 'admin_head', 'starter_bullet_output_favicon', 5 );
+add_action( 'login_head', 'starter_bullet_output_favicon', 5 );
+
+/**
  * Add body classes for mobile nav style.
  *
  * @param array $classes Body classes.
@@ -490,6 +595,10 @@ function starter_bullet_body_classes( array $classes ): array {
 		$classes[] = 'sb-header-transparent';
 	} else {
 		$classes[] = 'sb-header-solid';
+	}
+
+	if ( 'hide' === sb_get_site_option( 'header_nav_effect', sb_get_site_option( 'header_bg_visible', 'show' ) ) ) {
+		$classes[] = 'sb-header-nav-effect-hidden';
 	}
 
 	return $classes;

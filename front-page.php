@@ -11,6 +11,7 @@ get_header();
 
 $sections = array(
 	'hero',
+	'benefits',
 	'about',
 	'stats',
 	'features',

@@ -71,6 +71,44 @@ function sb_render_site_branding(): void {
 	$icon_ids  = sb_get_brand_icon_ids();
 	$site_name = get_bloginfo( 'name', 'display' );
 
+	// Full logo images replace the icon + text branding entirely.
+	$logo_transparent_id  = (int) sb_get_site_option( 'logo_transparent', 0 );
+	$logo_scrolled_id     = (int) sb_get_site_option( 'logo_scrolled', 0 );
+	$logo_transparent_url = sb_get_image_url( $logo_transparent_id, 'medium' );
+	$logo_scrolled_url    = sb_get_image_url( $logo_scrolled_id, 'medium' );
+
+	if ( $logo_transparent_url || $logo_scrolled_url ) {
+		if ( ! $logo_scrolled_url ) {
+			$logo_scrolled_url = $logo_transparent_url;
+		}
+		if ( ! $logo_transparent_url ) {
+			$logo_transparent_url = $logo_scrolled_url;
+		}
+		?>
+		<div class="site-branding">
+			<a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="site-branding__name flex items-center gap-2">
+				<span class="site-branding__mark-wrap site-branding__logo-wrap">
+					<img
+						class="site-branding__logo-img site-branding__mark--transparent-state"
+						src="<?php echo esc_url( $logo_transparent_url ); ?>"
+						alt="<?php echo esc_attr( $site_name ); ?>"
+						loading="eager"
+						decoding="async"
+					>
+					<img
+						class="site-branding__logo-img site-branding__mark--scrolled-state"
+						src="<?php echo esc_url( $logo_scrolled_url ); ?>"
+						alt="<?php echo esc_attr( $site_name ); ?>"
+						loading="eager"
+						decoding="async"
+					>
+				</span>
+			</a>
+		</div>
+		<?php
+		return;
+	}
+
 	$transparent_url = sb_get_image_url( $icon_ids['transparent'], 'medium' );
 	$scrolled_url      = sb_get_image_url( $icon_ids['scrolled'], 'medium' );
 	$has_icons         = $transparent_url || $scrolled_url;
@@ -161,6 +199,168 @@ function sb_get_section( string $section, ?string $field = null, $default = '' )
  */
 function sb_section_enabled( string $section ): bool {
 	return (bool) sb_get_section( $section, 'enabled', false );
+}
+
+/**
+ * Extract YouTube video ID from a URL (youtu.be, watch, embed, shorts) or raw ID.
+ *
+ * @param string $url YouTube URL or ID.
+ */
+function sb_youtube_id( string $url ): string {
+	$url = trim( $url );
+
+	if ( '' === $url ) {
+		return '';
+	}
+
+	if ( preg_match( '~(?:youtu\.be/|youtube\.com/(?:watch\?(?:[^#]*&)?v=|embed/|shorts/|v/))([A-Za-z0-9_-]{6,15})~', $url, $m ) ) {
+		return $m[1];
+	}
+
+	if ( preg_match( '~^[A-Za-z0-9_-]{6,15}$~', $url ) ) {
+		return $url;
+	}
+
+	return '';
+}
+
+/**
+ * Convert a hex color to rgba() notation.
+ *
+ * @param string $hex   Hex color (#rgb or #rrggbb).
+ * @param float  $alpha Alpha 0-1.
+ */
+function sb_hex_to_rgba( string $hex, float $alpha ): string {
+	$hex = ltrim( $hex, '#' );
+
+	if ( 3 === strlen( $hex ) ) {
+		$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+	}
+
+	$r = hexdec( substr( $hex, 0, 2 ) );
+	$g = hexdec( substr( $hex, 2, 2 ) );
+	$b = hexdec( substr( $hex, 4, 2 ) );
+
+	return sprintf( 'rgba(%d,%d,%d,%s)', $r, $g, $b, rtrim( rtrim( number_format( $alpha, 2 ), '0' ), '.' ) );
+}
+
+/**
+ * Darken a hex color by a given factor (for hover states).
+ *
+ * @param string $hex    Hex color.
+ * @param float  $factor 0-1, how much to darken (0.1 = 10% darker).
+ */
+function sb_darken_hex( string $hex, float $factor = 0.1 ): string {
+	$hex = ltrim( $hex, '#' );
+
+	if ( 3 === strlen( $hex ) ) {
+		$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+	}
+
+	$rgb = array(
+		hexdec( substr( $hex, 0, 2 ) ),
+		hexdec( substr( $hex, 2, 2 ) ),
+		hexdec( substr( $hex, 4, 2 ) ),
+	);
+
+	foreach ( $rgb as $i => $channel ) {
+		$rgb[ $i ] = max( 0, (int) round( $channel * ( 1 - $factor ) ) );
+	}
+
+	return sprintf( '#%02x%02x%02x', $rgb[0], $rgb[1], $rgb[2] );
+}
+
+/**
+ * Build inline style attribute (CSS variables) for the hero form card.
+ *
+ * Controls the card background color + opacity and the submit button color.
+ * Returns an escaped ` style="..."` attribute or empty string when defaults apply.
+ *
+ * @param array<string, mixed> $d Hero section data.
+ */
+function sb_hero_form_style( array $d ): string {
+	$bg_color  = sanitize_hex_color( (string) ( $d['form_bg_color'] ?? '' ) );
+	$opacity   = max( 0, min( 100, (int) ( $d['form_bg_opacity'] ?? 100 ) ) );
+	$btn_color = sanitize_hex_color( (string) ( $d['form_btn_color'] ?? '' ) );
+
+	$vars = array();
+
+	if ( $bg_color || $opacity < 100 ) {
+		$base   = $bg_color ? $bg_color : '#E3EAF2';
+		$vars[] = '--sb-form-bg:' . sb_hex_to_rgba( $base, $opacity / 100 );
+	}
+
+	if ( $btn_color ) {
+		$vars[] = '--sb-form-btn-bg:' . $btn_color;
+		$vars[] = '--sb-form-btn-hover:' . sb_darken_hex( $btn_color, 0.12 );
+	}
+
+	if ( ! $vars ) {
+		return '';
+	}
+
+	return ' style="' . esc_attr( implode( ';', $vars ) ) . '"';
+}
+
+/**
+ * Resolve icon width/height from section settings (defaults to 28).
+ *
+ * @param array<string, mixed> $d Section data.
+ * @return array{0:int,1:int}
+ */
+function sb_resolve_icon_size( array $d ): array {
+	$iw = absint( $d['icon_width'] ?? 0 );
+	$ih = absint( $d['icon_height'] ?? 0 );
+
+	if ( $iw < 12 && $ih < 12 ) {
+		return array( 28, 28 );
+	}
+	if ( $iw < 12 ) {
+		return array( $ih, $ih );
+	}
+	if ( $ih < 12 ) {
+		return array( $iw, $iw );
+	}
+
+	return array( $iw, $ih );
+}
+
+/**
+ * Build inline style for the circular icon background wrapper.
+ *
+ * @param array<string, mixed> $d        Section data.
+ * @param int                  $icon_box Outer circle size in px.
+ * @param string               $fallback Default background when no custom color (CSS value).
+ */
+function sb_icon_circle_style( array $d, int $icon_box, string $fallback = 'rgba(37,99,235,0.1)' ): string {
+	$style = 'width:' . $icon_box . 'px;height:' . $icon_box . 'px;';
+
+	if ( 'hide' === ( $d['icon_bg_visible'] ?? 'show' ) ) {
+		return $style . 'background:transparent;';
+	}
+
+	$color = sanitize_hex_color( (string) ( $d['icon_bg_color'] ?? '' ) );
+	$style .= 'background:' . ( $color ? $color : $fallback ) . ';';
+
+	return $style;
+}
+
+/**
+ * Get inline style attribute for a section's custom background color.
+ *
+ * Returns an escaped ` style="..."` attribute (or empty string) that overrides
+ * the section's default background, including gradient backgrounds.
+ *
+ * @param string $section Section key.
+ */
+function sb_section_bg_style( string $section ): string {
+	$color = sanitize_hex_color( (string) sb_get_section( $section, 'bg_color', '' ) );
+
+	if ( ! $color ) {
+		return '';
+	}
+
+	return ' style="background-color:' . esc_attr( $color ) . ';background-image:none;"';
 }
 
 /**
@@ -383,13 +583,28 @@ function sb_benefit_icon_library(): array {
 }
 
 /**
- * Render icon for a hero benefit item (Heroicon or Lordicon).
+ * Render a Heroicon or Lordicon.
  *
- * @param array<string, mixed> $data  Hero section data.
- * @param int                  $index Benefit index 1-3.
+ * @param string               $icon_key Icon library key.
+ * @param string               $lordicon Lordicon URL or id (wins when set).
+ * @param array<string, mixed> $args     Optional render args.
  */
-function sb_render_benefit_icon( array $data, int $index ): void {
-	$lordicon = trim( (string) ( $data[ "benefit_{$index}_lordicon" ] ?? '' ) );
+function sb_render_icon( string $icon_key = '', string $lordicon = '', array $args = array() ): void {
+	$args = array_merge(
+		array(
+			'svg_class'       => 'h-7 w-7',
+			'lordicon_colors' => 'primary:#2563eb,secondary:#f9bc2f',
+			'lordicon_size'   => '40px',
+			'fallback_key'    => 'badge',
+			'width'           => 0,
+			'height'          => 0,
+		),
+		$args
+	);
+
+	$width  = absint( $args['width'] );
+	$height = absint( $args['height'] );
+	$lordicon = trim( $lordicon );
 
 	if ( $lordicon !== '' ) {
 		if ( ! preg_match( '/^https?:\/\//i', $lordicon ) ) {
@@ -399,28 +614,69 @@ function sb_render_benefit_icon( array $data, int $index ): void {
 			$lordicon .= '.json';
 		}
 
+		$lord_w = $width >= 12 ? $width . 'px' : (string) $args['lordicon_size'];
+		$lord_h = $height >= 12 ? $height . 'px' : (string) $args['lordicon_size'];
+
 		wp_enqueue_script( 'lordicon', 'https://cdn.lordicon.com/lordicon.js', array(), null, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
 		?>
 		<lord-icon
 			src="<?php echo esc_url( $lordicon ); ?>"
 			trigger="loop"
 			delay="2000"
-			colors="primary:#ffffff,secondary:#f9bc2f"
-			style="width:40px;height:40px"
+			colors="<?php echo esc_attr( (string) $args['lordicon_colors'] ); ?>"
+			style="width:<?php echo esc_attr( $lord_w ); ?>;height:<?php echo esc_attr( $lord_h ); ?>"
 		></lord-icon>
 		<?php
 		return;
 	}
 
-	$library  = sb_benefit_icon_library();
-	$defaults = array( 1 => 'home', 2 => 'building', 3 => 'clock' );
-	$key      = (string) ( $data[ "benefit_{$index}_icon" ] ?? '' );
-
-	if ( ! isset( $library[ $key ] ) ) {
-		$key = $defaults[ $index ] ?? 'home';
+	$library = sb_benefit_icon_library();
+	if ( ! isset( $library[ $icon_key ] ) ) {
+		$icon_key = (string) $args['fallback_key'];
+	}
+	if ( ! isset( $library[ $icon_key ] ) ) {
+		$icon_key = (string) array_key_first( $library );
 	}
 
-	echo '<svg class="h-10 w-10 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">' . $library[ $key ]['path'] . '</svg>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	$style = '';
+	if ( $width >= 12 || $height >= 12 ) {
+		$style_parts = array();
+		if ( $width >= 12 ) {
+			$style_parts[] = 'width:' . $width . 'px';
+		}
+		if ( $height >= 12 ) {
+			$style_parts[] = 'height:' . $height . 'px';
+		}
+		$style = ' style="' . esc_attr( implode( ';', $style_parts ) ) . '"';
+	}
+
+	printf(
+		'<svg class="%s shrink-0"%s fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">%s</svg>',
+		esc_attr( (string) $args['svg_class'] ),
+		$style, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		$library[ $icon_key ]['path'] // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	);
+}
+
+/**
+ * Render icon for a hero benefit item (Heroicon or Lordicon).
+ *
+ * @param array<string, mixed> $data  Hero section data.
+ * @param int                  $index Benefit index 1-3.
+ */
+function sb_render_benefit_icon( array $data, int $index ): void {
+	$defaults = array( 1 => 'home', 2 => 'building', 3 => 'clock' );
+
+	sb_render_icon(
+		(string) ( $data[ "benefit_{$index}_icon" ] ?? '' ),
+		(string) ( $data[ "benefit_{$index}_lordicon" ] ?? '' ),
+		array(
+			'svg_class'       => 'h-10 w-10',
+			'lordicon_colors' => 'primary:#ffffff,secondary:#f9bc2f',
+			'lordicon_size'   => '40px',
+			'fallback_key'    => $defaults[ $index ] ?? 'home',
+		)
+	);
 }
 
 /**
