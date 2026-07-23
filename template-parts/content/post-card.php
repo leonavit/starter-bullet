@@ -6,6 +6,8 @@
  */
 
 declare(strict_types=1);
+
+$show_date = 'show' === sb_get_site_option( 'post_date_visible', 'hide' );
 ?>
 <article <?php post_class( 'overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md' ); ?>>
 	<?php if ( has_post_thumbnail() ) : ?>
@@ -14,8 +16,10 @@ declare(strict_types=1);
 		<div class="skeleton h-48 w-full"></div>
 	<?php endif; ?>
 	<div class="p-6">
-		<p class="text-xs text-royal-blue"><?php echo esc_html( get_the_date() ); ?></p>
-		<h3 class="mt-2 text-lg font-bold text-navy">
+		<?php if ( $show_date ) : ?>
+			<p class="text-xs text-royal-blue"><?php echo esc_html( get_the_date() ); ?></p>
+		<?php endif; ?>
+		<h3 class="<?php echo $show_date ? 'mt-2 ' : ''; ?>text-lg font-bold text-navy">
 			<a href="<?php the_permalink(); ?>" class="hover:text-royal-blue"><?php the_title(); ?></a>
 		</h3>
 		<p class="mt-2 text-sm text-gray-600"><?php echo esc_html( get_the_excerpt() ); ?></p>

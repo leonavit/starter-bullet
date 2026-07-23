@@ -41,7 +41,7 @@ if ( $label_weight >= 100 && $label_weight <= 800 ) {
 $number_style = $number_style_parts ? ' style="' . esc_attr( implode( ';', $number_style_parts ) ) . '"' : '';
 $label_style  = $label_style_parts ? ' style="' . esc_attr( implode( ';', $label_style_parts ) ) . '"' : '';
 ?>
-<section class="bg-slate-50 py-12"<?php echo sb_section_bg_style( 'stats' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+<section class="bg-slate-50 py-12 <?php echo esc_attr( sb_section_hide_mobile_class( 'stats' ) ); ?>"<?php echo sb_section_bg_style( 'stats' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 	<div class="sb-section mx-auto grid max-w-7xl grid-cols-2 gap-8 px-4 lg:grid-cols-4 lg:px-8" data-skeleton>
 		<?php for ( $i = 1; $i <= 4; $i++ ) : ?>
 			<div class="text-center">

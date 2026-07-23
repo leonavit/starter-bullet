@@ -364,6 +364,15 @@ function sb_section_bg_style( string $section ): string {
 }
 
 /**
+ * Extra class when a section should be hidden on mobile.
+ *
+ * @param string $section Section key.
+ */
+function sb_section_hide_mobile_class( string $section ): string {
+	return ! empty( sb_get_section( $section, 'hide_mobile' ) ) ? 'sb-hide-mobile' : '';
+}
+
+/**
  * Get attachment image URL by ID.
  *
  * @param int    $attachment_id Attachment ID.
@@ -462,6 +471,10 @@ function sb_get_header_bg_color(): string {
  * @param array<string, mixed> $data Section data with midrag_* fields.
  */
 function sb_render_midrag_badge( array $data ): void {
+	if ( ! empty( $data['hide_midrag'] ) ) {
+		return;
+	}
+
 	$logo_id = (int) ( $data['midrag_logo_id'] ?? 0 );
 	if ( ! $logo_id ) {
 		$hero_fallback = sb_get_section( 'hero' );

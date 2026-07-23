@@ -78,25 +78,25 @@ function initLazyImages() {
 }
 
 function initFaqAccordion() {
-	const root = document.getElementById('faq-accordion');
-	if (!root) return;
+	document.querySelectorAll('[data-faq-accordion], #faq-accordion').forEach((root) => {
+		const items = [...root.querySelectorAll('.faq-item')];
+		if (!items.length) return;
 
-	const items = [...root.querySelectorAll('.faq-item')];
+		items.forEach((item) => {
+			const trigger = item.querySelector('.faq-trigger');
+			if (!trigger) return;
 
-	items.forEach((item) => {
-		const trigger = item.querySelector('.faq-trigger');
-		if (!trigger) return;
+			trigger.addEventListener('click', () => {
+				if (item.classList.contains('is-open')) return;
 
-		trigger.addEventListener('click', () => {
-			if (item.classList.contains('is-open')) return;
+				items.forEach((other) => {
+					other.classList.remove('is-open');
+					other.querySelector('.faq-trigger')?.setAttribute('aria-expanded', 'false');
+				});
 
-			items.forEach((other) => {
-				other.classList.remove('is-open');
-				other.querySelector('.faq-trigger')?.setAttribute('aria-expanded', 'false');
+				item.classList.add('is-open');
+				trigger.setAttribute('aria-expanded', 'true');
 			});
-
-			item.classList.add('is-open');
-			trigger.setAttribute('aria-expanded', 'true');
 		});
 	});
 }
@@ -123,23 +123,33 @@ function initMobileSubmenus() {
 	const mobileNav = document.querySelector('.mobile-nav-links');
 	if (!mobileNav) return;
 
-	mobileNav.querySelectorAll('.menu-item-has-children > a').forEach((link) => {
-		link.addEventListener('click', (event) => {
-			if (window.matchMedia('(min-width: 1024px)').matches) return;
+	mobileNav.querySelectorAll('.menu-item-has-children').forEach((item) => {
+		const link = item.querySelector(':scope > a');
+		if (!link || item.querySelector(':scope > .sb-sub-toggle')) return;
 
-			const parentItem = link.parentElement;
-			if (!parentItem?.classList.contains('menu-item-has-children')) return;
+		// Parent link navigates to its page; a separate button toggles the submenu.
+		const toggle = document.createElement('button');
+		toggle.type = 'button';
+		toggle.className = 'sb-sub-toggle';
+		toggle.setAttribute('aria-expanded', 'false');
+		toggle.setAttribute('aria-label', 'פתח תת-תפריט');
+		toggle.innerHTML =
+			'<svg class="sb-sub-toggle__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+		link.after(toggle);
 
+		toggle.addEventListener('click', (event) => {
 			event.preventDefault();
+			event.stopPropagation();
 
-			const isOpen = parentItem.classList.contains('is-sub-open');
-			mobileNav.querySelectorAll('.menu-item-has-children.is-sub-open').forEach((item) => {
-				item.classList.remove('is-sub-open');
+			const isOpen = item.classList.contains('is-sub-open');
+			mobileNav.querySelectorAll('.menu-item-has-children.is-sub-open').forEach((other) => {
+				if (other === item) return;
+				other.classList.remove('is-sub-open');
+				other.querySelector(':scope > .sb-sub-toggle')?.setAttribute('aria-expanded', 'false');
 			});
 
-			if (!isOpen) {
-				parentItem.classList.add('is-sub-open');
-			}
+			item.classList.toggle('is-sub-open', !isOpen);
+			toggle.setAttribute('aria-expanded', String(!isOpen));
 		});
 	});
 }
@@ -150,14 +160,6 @@ function initCf7FormErrors() {
 		if (!form) return;
 
 		const syncErrors = () => {
-			const outputs = [...formRoot.querySelectorAll('.wpcf7-response-output')].filter(
-				(el) => !el.hasAttribute('aria-hidden')
-			);
-
-			outputs.forEach((output, index) => {
-				output.hidden = index > 0;
-			});
-
 			formRoot.querySelectorAll('.wpcf7-not-valid-tip').forEach((tip) => {
 				const wrap = tip.closest('.wpcf7-form-control-wrap');
 				if (wrap && tip.parentElement !== wrap) {

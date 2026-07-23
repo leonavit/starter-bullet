@@ -205,16 +205,34 @@
 		const $items = $wrap.find('.sb-link-items--' + source).show();
 		$url.prop('readonly', true);
 
-		if ($items.val()) {
-			$url.val($items.val());
+		const selectedUrl = $items.find('option:selected').attr('data-url') || '';
+		if (selectedUrl) {
+			$url.val(selectedUrl);
 		}
 	});
 
 	$(document).on('change', '.sb-link-items', function () {
 		const $wrap = $(this).closest('.sb-link-field');
-		if ($(this).val()) {
-			$wrap.find('.sb-link-url').val($(this).val());
+		const selectedUrl = $(this).find('option:selected').attr('data-url') || '';
+		if (selectedUrl) {
+			$wrap.find('.sb-link-url').val(selectedUrl);
 		}
+	});
+
+	// Keep URL inputs in sync with the chosen page/post right before save.
+	$(document).on('submit', 'form', function () {
+		$(this).find('.sb-link-field').each(function () {
+			const $wrap = $(this);
+			const source = $wrap.find('.sb-link-source').val();
+			if (source !== 'page' && source !== 'post') {
+				return;
+			}
+
+			const selectedUrl = $wrap.find('.sb-link-items--' + source + ' option:selected').attr('data-url') || '';
+			if (selectedUrl) {
+				$wrap.find('.sb-link-url').val(selectedUrl);
+			}
+		});
 	});
 
 	$(document).on('click', '.sb-icon-picker__option', function (e) {

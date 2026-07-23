@@ -19,7 +19,7 @@ $query = new WP_Query(
 	)
 );
 ?>
-<section id="testimonials" class="bg-blue-50 py-16 lg:py-20"<?php echo sb_section_bg_style( 'testimonials' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+<section id="testimonials" class="bg-blue-50 py-16 lg:py-20 <?php echo esc_attr( sb_section_hide_mobile_class( 'testimonials' ) ); ?>"<?php echo sb_section_bg_style( 'testimonials' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 	<div class="mx-auto max-w-7xl px-4 lg:px-8">
 		<div class="sb-section mb-12 text-center" data-skeleton>
 			<h2 class="text-3xl font-extrabold text-navy sm:text-4xl"><?php echo esc_html( (string) $d['title'] ); ?></h2>

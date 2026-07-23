@@ -7,7 +7,7 @@
 
 declare(strict_types=1);
 
-$d = sb_get_section( 'faq' );
+$d     = sb_get_section( 'faq' );
 $count = max( 1, min( 20, (int) ( $d['count'] ?? 6 ) ) );
 
 $query = new WP_Query(
@@ -19,41 +19,53 @@ $query = new WP_Query(
 		'post_status'    => 'publish',
 	)
 );
-?>
-<section id="faq" class="bg-white py-16 lg:py-20"<?php echo sb_section_bg_style( 'faq' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
-	<div class="mx-auto grid max-w-7xl gap-10 px-4 lg:grid-cols-2 lg:px-8">
-		<div class="sb-section" data-skeleton>
-			<h2 class="text-3xl font-extrabold text-navy sm:text-4xl"><?php echo esc_html( (string) $d['title'] ); ?></h2>
-			<p class="mt-4 text-gray-600"><?php echo esc_html( (string) $d['content'] ); ?></p>
-			<a href="<?php echo esc_url( (string) $d['btn_url'] ); ?>" class="mt-6 inline-flex rounded-full bg-accent-yellow px-6 py-3 text-sm font-bold text-navy transition hover:bg-yellow-300">
-				<?php echo esc_html( (string) $d['btn_text'] ); ?>
-			</a>
-		</div>
 
-		<div class="sb-section faq-accordion space-y-4" data-skeleton id="faq-accordion">
-			<?php if ( $query->have_posts() ) : $idx = 0; ?>
-				<?php while ( $query->have_posts() ) : $query->the_post(); $idx++; ?>
-					<div class="faq-item<?php echo 1 === $idx ? ' is-open' : ''; ?>">
-						<button type="button" class="faq-trigger" aria-expanded="<?php echo 1 === $idx ? 'true' : 'false'; ?>">
-							<span class="faq-question"><?php the_title(); ?></span>
-							<span class="faq-arrow" aria-hidden="true">
-								<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-									<path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-								</svg>
-							</span>
-						</button>
-						<div class="faq-panel">
-							<div class="faq-answer prose prose-sm max-w-none text-gray-600">
-								<?php the_content(); ?>
-							</div>
-						</div>
-					</div>
-				<?php endwhile; wp_reset_postdata(); ?>
-			<?php else : ?>
-				<?php for ( $i = 0; $i < 4; $i++ ) : ?>
-					<div class="skeleton h-16 rounded-xl"></div>
-				<?php endfor; ?>
+$form_shortcode = trim( (string) ( $d['form_shortcode'] ?? '' ) );
+$has_form       = '' !== $form_shortcode;
+?>
+<section id="faq" class="bg-white py-16 lg:py-20 <?php echo esc_attr( sb_section_hide_mobile_class( 'faq' ) ); ?>"<?php echo sb_section_bg_style( 'faq' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+	<div class="mx-auto grid max-w-7xl items-start gap-10 px-4 <?php echo $has_form ? 'lg:grid-cols-2' : ''; ?> lg:px-8">
+		<?php if ( $has_form ) : ?>
+			<?php
+			$hero_form  = sb_get_section( 'hero' );
+			$form_title = sb_get_form_title();
+			?>
+			<div class="faq-form-col order-2 sb-section lg:order-1" data-skeleton>
+				<div class="faq-form hero-form-card" dir="rtl"<?php echo sb_hero_form_style( is_array( $hero_form ) ? $hero_form : array() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+					<?php if ( $form_title !== '' ) : ?>
+						<p class="hero-form-title"><?php echo esc_html( $form_title ); ?></p>
+					<?php endif; ?>
+					<?php echo do_shortcode( $form_shortcode ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				</div>
+			</div>
+		<?php endif; ?>
+
+		<div class="order-1 sb-section text-center md:text-start <?php echo $has_form ? 'lg:order-2' : ''; ?>" data-skeleton>
+			<h2 class="text-3xl font-extrabold text-navy sm:text-4xl"><?php echo esc_html( (string) $d['title'] ); ?></h2>
+			<?php if ( trim( (string) ( $d['content'] ?? '' ) ) !== '' ) : ?>
+				<p class="mt-4 text-gray-600"><?php echo esc_html( (string) $d['content'] ); ?></p>
 			<?php endif; ?>
+
+			<div class="mt-8">
+				<?php if ( $query->have_posts() ) : ?>
+					<?php
+					get_template_part(
+						'template-parts/content/faq',
+						'accordion',
+						array(
+							'query'        => $query,
+							'accordion_id' => 'faq-accordion',
+						)
+					);
+					?>
+				<?php else : ?>
+					<div class="space-y-4">
+						<?php for ( $i = 0; $i < 4; $i++ ) : ?>
+							<div class="skeleton h-16 rounded-xl"></div>
+						<?php endfor; ?>
+					</div>
+				<?php endif; ?>
+			</div>
 		</div>
 	</div>
 </section>

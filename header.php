@@ -46,13 +46,45 @@ if ( 'hide' === sb_get_site_option( 'header_nav_effect', sb_get_site_option( 'he
 		</nav>
 
 		<?php if ( $phone ) : ?>
-			<a href="tel:<?php echo esc_attr( sb_sanitize_phone_link( $phone ) ); ?>" class="sb-cta sb-btn-cta hidden rounded-full bg-accent-yellow px-5 py-2.5 font-bold text-navy transition hover:bg-yellow-300 sm:inline-flex">
-				<?php echo esc_html( $phone ); ?>
+			<?php $phone_lordicon = trim( (string) sb_get_site_option( 'header_phone_lordicon', '' ) ); ?>
+			<a href="tel:<?php echo esc_attr( sb_sanitize_phone_link( $phone ) ); ?>" class="sb-cta sb-btn-cta sb-header-phone hidden items-center gap-2 rounded-full bg-accent-yellow px-5 py-2.5 font-bold text-navy transition hover:bg-yellow-300 sm:inline-flex">
+				<span><?php echo esc_html( $phone ); ?></span>
+				<?php
+				if ( '' !== $phone_lordicon ) {
+					sb_render_icon(
+						'',
+						$phone_lordicon,
+						array(
+							'lordicon_colors' => 'primary:#1A1D2E,secondary:#1A1D2E',
+							'lordicon_size'   => '22px',
+							'width'           => 22,
+							'height'          => 22,
+						)
+					);
+				}
+				?>
 			</a>
 		<?php endif; ?>
 
-		<button type="button" id="mobile-menu-toggle" class="rounded-lg p-2 hover:bg-white/10 lg:hidden" aria-expanded="false" aria-controls="mobile-menu-panel" aria-label="<?php esc_attr_e( 'פתח תפריט', 'starter-bullet' ); ?>">
-			<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+		<?php
+		$hamburger_style = (string) sb_get_site_option( 'hamburger_style', 'lines' );
+		$hamburger_size  = (string) sb_get_site_option( 'hamburger_size', 'small' );
+		if ( ! in_array( $hamburger_style, array( 'lines', 'bars', 'grid' ), true ) ) {
+			$hamburger_style = 'lines';
+		}
+		if ( ! in_array( $hamburger_size, array( 'small', 'large' ), true ) ) {
+			$hamburger_size = 'small';
+		}
+		$hamburger_class = 'sb-hamburger sb-hamburger--' . $hamburger_style . ' sb-hamburger--' . $hamburger_size;
+		?>
+		<button type="button" id="mobile-menu-toggle" class="<?php echo esc_attr( $hamburger_class ); ?> rounded-lg p-2 hover:bg-white/10 lg:hidden" aria-expanded="false" aria-controls="mobile-menu-panel" aria-label="<?php esc_attr_e( 'פתח תפריט', 'starter-bullet' ); ?>">
+			<?php if ( 'bars' === $hamburger_style ) : ?>
+				<svg class="sb-hamburger__icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="5" width="18" height="3" rx="1.5"/><rect x="3" y="10.5" width="18" height="3" rx="1.5"/><rect x="3" y="16" width="18" height="3" rx="1.5"/></svg>
+			<?php elseif ( 'grid' === $hamburger_style ) : ?>
+				<svg class="sb-hamburger__icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="6" cy="6" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+			<?php else : ?>
+				<svg class="sb-hamburger__icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+			<?php endif; ?>
 		</button>
 	</div>
 </header>

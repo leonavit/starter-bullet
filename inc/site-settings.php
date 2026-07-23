@@ -25,11 +25,15 @@ function starter_bullet_default_site_settings(): array {
 		'favicon_id'             => 0,
 		'page_default_image_id'  => 0,
 		'header_phone'           => '03-1234567',
+		'header_phone_lordicon'  => 'https://cdn.lordicon.com/ojbonimq.json',
 		'header_style'      => 'transparent',
 		'header_bg_color'   => '#1A1D2E',
 		'header_nav_effect' => 'show',
 		'form_title'        => 'קבלו הצעת מחיר חינם',
+		'form_title_color'  => '#000000',
 		'mobile_menu_style' => 'overlay',
+		'hamburger_style'   => 'lines',
+		'hamburger_size'    => 'small',
 		'font_family'       => 'Assistant',
 		'font_menu'         => '14',
 		'font_h1'           => '40',
@@ -40,6 +44,7 @@ function starter_bullet_default_site_settings(): array {
 		'font_cta'          => '16',
 		'whatsapp_number'   => '',
 		'whatsapp_position' => 'bottom-right',
+		'post_date_visible' => 'hide',
 	);
 }
 
@@ -113,6 +118,14 @@ function starter_bullet_sanitize_site_settings( array $input ): array {
 		? $input['mobile_menu_style']
 		: 'overlay';
 
+	$output['hamburger_style'] = in_array( $input['hamburger_style'] ?? '', array( 'lines', 'bars', 'grid' ), true )
+		? $input['hamburger_style']
+		: 'lines';
+
+	$output['hamburger_size'] = in_array( $input['hamburger_size'] ?? '', array( 'small', 'large' ), true )
+		? $input['hamburger_size']
+		: 'small';
+
 	$fonts = array_keys( starter_bullet_google_fonts() );
 	$font  = sanitize_text_field( $input['font_family'] ?? $defaults['font_family'] );
 	$output['font_family'] = in_array( $font, $fonts, true ) ? $font : 'Assistant';
@@ -122,7 +135,10 @@ function starter_bullet_sanitize_site_settings( array $input ): array {
 	}
 
 	$output['header_phone'] = sanitize_text_field( $input['header_phone'] ?? $defaults['header_phone'] );
+	$output['header_phone_lordicon'] = sanitize_text_field( $input['header_phone_lordicon'] ?? $defaults['header_phone_lordicon'] );
 	$output['form_title']   = sanitize_text_field( $input['form_title'] ?? $defaults['form_title'] );
+	$form_title_color       = sanitize_hex_color( (string) ( $input['form_title_color'] ?? $defaults['form_title_color'] ) );
+	$output['form_title_color'] = $form_title_color ? $form_title_color : '#000000';
 	$output['logo_transparent']       = absint( $input['logo_transparent'] ?? $defaults['logo_transparent'] );
 	$output['logo_scrolled']          = absint( $input['logo_scrolled'] ?? $defaults['logo_scrolled'] );
 	$output['brand_icon_transparent'] = absint( $input['brand_icon_transparent'] ?? $defaults['brand_icon_transparent'] );
@@ -145,6 +161,10 @@ function starter_bullet_sanitize_site_settings( array $input ): array {
 	$output['whatsapp_position'] = in_array( $input['whatsapp_position'] ?? '', array( 'bottom-right', 'bottom-left' ), true )
 		? $input['whatsapp_position']
 		: 'bottom-right';
+
+	$output['post_date_visible'] = in_array( $input['post_date_visible'] ?? '', array( 'show', 'hide' ), true )
+		? $input['post_date_visible']
+		: 'hide';
 
 	return $output;
 }
@@ -300,6 +320,13 @@ function starter_bullet_site_settings_page_html(): void {
 							<p class="description"><?php esc_html_e( 'מוצג בצד שמאל של הבר העליון. השאר ריק כדי להסתיר.', 'starter-bullet' ); ?></p>
 						</td>
 					</tr>
+					<tr>
+						<th><?php esc_html_e( 'אייקון Lordicon ליד הטלפון', 'starter-bullet' ); ?></th>
+						<td>
+							<input type="text" name="starter_bullet_site_settings[header_phone_lordicon]" value="<?php echo esc_attr( (string) ( $s['header_phone_lordicon'] ?? '' ) ); ?>" class="regular-text" placeholder="https://cdn.lordicon.com/….json" style="width:100%;max-width:420px;">
+							<p class="description"><?php esc_html_e( 'הדביקו קישור JSON מ-lordicon.com או רק את המזהה. האייקון יופיע משמאל למספר בתוך הכפתור. השאירו ריק בלי אייקון.', 'starter-bullet' ); ?></p>
+						</td>
+					</tr>
 				</table>
 			</div>
 
@@ -313,7 +340,16 @@ function starter_bullet_site_settings_page_html(): void {
 						<th><?php esc_html_e( 'כותרת ראשית של הטופס', 'starter-bullet' ); ?></th>
 						<td>
 							<input type="text" name="starter_bullet_site_settings[form_title]" value="<?php echo esc_attr( (string) $s['form_title'] ); ?>" class="regular-text" placeholder="קבלו הצעת מחיר חינם">
-							<p class="description"><?php esc_html_e( 'מוצג מעל שדות הטופס בבלוק ההירו.', 'starter-bullet' ); ?></p>
+							<p class="description"><?php esc_html_e( 'מוצג מעל שדות הטופס ב-Hero ובטופס בשאלות ותשובות.', 'starter-bullet' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th><?php esc_html_e( 'צבע כותרת הטופס', 'starter-bullet' ); ?></th>
+						<td>
+							<?php $form_title_color = (string) ( $s['form_title_color'] ?? '#000000' ); ?>
+							<input type="color" value="<?php echo esc_attr( $form_title_color ); ?>" oninput="this.nextElementSibling.value=this.value" aria-hidden="true">
+							<input type="text" name="starter_bullet_site_settings[form_title_color]" value="<?php echo esc_attr( $form_title_color ); ?>" class="regular-text" pattern="^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$" placeholder="#000000">
+							<p class="description"><?php esc_html_e( 'ברירת מחדל: שחור (#000000). חל על כל טפסי יצירת הקשר באתר.', 'starter-bullet' ); ?></p>
 						</td>
 					</tr>
 				</table>
@@ -330,6 +366,67 @@ function starter_bullet_site_settings_page_html(): void {
 						<td>
 							<label><input type="radio" name="starter_bullet_site_settings[mobile_menu_style]" value="overlay" <?php checked( $s['mobile_menu_style'], 'overlay' ); ?>> <?php esc_html_e( 'Overlay — מסך מלא עם אנימציה עדינה', 'starter-bullet' ); ?></label><br>
 							<label><input type="radio" name="starter_bullet_site_settings[mobile_menu_style]" value="slide-right" <?php checked( $s['mobile_menu_style'], 'slide-right' ); ?>> <?php esc_html_e( 'בר נפתח מימין', 'starter-bullet' ); ?></label>
+						</td>
+					</tr>
+					<tr>
+						<th><?php esc_html_e( 'סוג המבורגר', 'starter-bullet' ); ?></th>
+						<td>
+							<?php
+							$hamburger_style = (string) ( $s['hamburger_style'] ?? 'lines' );
+							$hamburger_opts  = array(
+								'lines' => array(
+									'label' => __( 'קווים קלאסיים', 'starter-bullet' ),
+									'desc'  => __( 'שלושה קווים דקים (נוכחי)', 'starter-bullet' ),
+									'icon'  => '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>',
+								),
+								'bars'  => array(
+									'label' => __( 'פסים עבים', 'starter-bullet' ),
+									'desc'  => __( 'שלושה פסים מעוגלים ובולטים', 'starter-bullet' ),
+									'icon'  => '<svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="5" width="18" height="3" rx="1.5"/><rect x="3" y="10.5" width="18" height="3" rx="1.5"/><rect x="3" y="16" width="18" height="3" rx="1.5"/></svg>',
+								),
+								'grid'  => array(
+									'label' => __( 'רשת נקודות', 'starter-bullet' ),
+									'desc'  => __( 'סגנון תפריט אפליקציות', 'starter-bullet' ),
+									'icon'  => '<svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="6" cy="6" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>',
+								),
+							);
+							?>
+							<div style="display:flex;flex-wrap:wrap;gap:12px;">
+								<?php foreach ( $hamburger_opts as $value => $opt ) : ?>
+									<label style="display:flex;flex-direction:column;align-items:center;gap:6px;min-width:110px;padding:12px 10px;border:2px solid <?php echo $hamburger_style === $value ? '#2271b1' : '#dcdcde'; ?>;border-radius:8px;background:<?php echo $hamburger_style === $value ? '#f0f6fc' : '#fff'; ?>;cursor:pointer;text-align:center;">
+										<input type="radio" name="starter_bullet_site_settings[hamburger_style]" value="<?php echo esc_attr( $value ); ?>" <?php checked( $hamburger_style, $value ); ?> style="margin:0;">
+										<span style="display:inline-flex;color:#1d2327;"><?php echo $opt['icon']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
+										<strong style="font-size:13px;"><?php echo esc_html( $opt['label'] ); ?></strong>
+										<span class="description" style="margin:0;font-size:11px;line-height:1.3;"><?php echo esc_html( $opt['desc'] ); ?></span>
+									</label>
+								<?php endforeach; ?>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<th><?php esc_html_e( 'גודל המבורגר', 'starter-bullet' ); ?></th>
+						<td>
+							<?php $hamburger_size = (string) ( $s['hamburger_size'] ?? 'small' ); ?>
+							<label><input type="radio" name="starter_bullet_site_settings[hamburger_size]" value="small" <?php checked( $hamburger_size, 'small' ); ?>> <?php esc_html_e( 'קטן (נוכחי)', 'starter-bullet' ); ?></label><br>
+							<label><input type="radio" name="starter_bullet_site_settings[hamburger_size]" value="large" <?php checked( $hamburger_size, 'large' ); ?>> <?php esc_html_e( 'גדול (+40%)', 'starter-bullet' ); ?></label>
+						</td>
+					</tr>
+				</table>
+			</div>
+
+			<div class="postbox" style="margin-top:20px;padding:16px;">
+				<h2 style="margin-top:0;display:flex;align-items:center;gap:12px;">
+					<?php esc_html_e( 'כתבות / בלוג', 'starter-bullet' ); ?>
+					<button type="button" class="button sb-section-toggle" aria-expanded="false" title="<?php esc_attr_e( 'קפל / פתח סקשן', 'starter-bullet' ); ?>" style="margin-inline-start:auto;width:30px;height:30px;padding:0;font-size:18px;line-height:1;font-weight:700;">+</button>
+				</h2>
+				<table class="form-table" style="display:none;">
+					<tr>
+						<th><?php esc_html_e( 'תאריך בכתבות', 'starter-bullet' ); ?></th>
+						<td>
+							<?php $post_date_visible = (string) ( $s['post_date_visible'] ?? 'hide' ); ?>
+							<label><input type="radio" name="starter_bullet_site_settings[post_date_visible]" value="hide" <?php checked( 'hide', $post_date_visible ); ?>> <?php esc_html_e( 'מוסתר (ברירת מחדל)', 'starter-bullet' ); ?></label><br>
+							<label><input type="radio" name="starter_bullet_site_settings[post_date_visible]" value="show" <?php checked( 'show', $post_date_visible ); ?>> <?php esc_html_e( 'חשוף', 'starter-bullet' ); ?></label>
+							<p class="description"><?php esc_html_e( 'שולט בהצגת התאריך בכרטיסי כתבות ובעמוד כתבה בודדת.', 'starter-bullet' ); ?></p>
 						</td>
 					</tr>
 				</table>
@@ -521,6 +618,7 @@ function starter_bullet_output_dynamic_styles(): void {
 			--sb-font-cta:%8$spx;
 			--sb-header-bg:%9$s;
 			--sb-header-height:6rem;
+			--sb-form-title-color:%10$s;
 		}
 		body{font-family:var(--sb-font-family);}
 		h1,.sb-h1{font-size:var(--sb-font-h1);}
@@ -535,6 +633,7 @@ function starter_bullet_output_dynamic_styles(): void {
 		.sb-nav-primary > li > a{font-size:var(--sb-font-menu);}
 		.sb-cta,.sb-btn-cta,input[type=submit].btn-send{font-size:var(--sb-font-cta);}
 		.site-header--solid{background-color:var(--sb-header-bg);}
+		.hero-form-card .hero-form-title{color:var(--sb-form-title-color,#000000)!important;}
 		body.sb-header-nav-effect-hidden .site-header--transparent .primary-nav .sb-nav-primary,
 		body.sb-header-nav-effect-hidden .primary-nav .sb-nav-primary,
 		.site-header--nav-effect-hidden .primary-nav .sb-nav-primary{
@@ -552,7 +651,8 @@ function starter_bullet_output_dynamic_styles(): void {
 		(int) $s['font_h4'],
 		(int) $s['font_p'],
 		(int) $s['font_cta'],
-		esc_attr( (string) $s['header_bg_color'] )
+		esc_attr( (string) $s['header_bg_color'] ),
+		esc_attr( sanitize_hex_color( (string) ( $s['form_title_color'] ?? '' ) ) ?: '#000000' )
 	);
 
 	wp_add_inline_style( 'starter-bullet-main', $css );
@@ -600,6 +700,9 @@ function starter_bullet_body_classes( array $classes ): array {
 	if ( 'hide' === sb_get_site_option( 'header_nav_effect', sb_get_site_option( 'header_bg_visible', 'show' ) ) ) {
 		$classes[] = 'sb-header-nav-effect-hidden';
 	}
+
+	$hamburger_size = (string) sb_get_site_option( 'hamburger_size', 'small' );
+	$classes[]      = 'large' === $hamburger_size ? 'sb-hamburger-size-large' : 'sb-hamburger-size-small';
 
 	return $classes;
 }

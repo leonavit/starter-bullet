@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return array<string, array<string, mixed>>
  */
 function starter_bullet_default_sections(): array {
-	return array(
+	$sections = array(
 		'hero' => array(
 			'enabled'            => 1,
 			'bg_color'           => '',
@@ -96,15 +96,17 @@ function starter_bullet_default_sections(): array {
 			'stat_4_label'  => 'פרויקטים',
 		),
 		'features' => array(
-			'enabled'         => 1,
-			'bg_color'        => '',
-			'title'           => 'למה לבחור בנו?',
-			'columns'         => 3,
-			'icon_width'      => '',
-			'icon_height'     => '',
-			'icon_bg_visible' => 'show',
-			'icon_bg_color'   => '',
-			'items'           => array(
+			'enabled'          => 1,
+			'bg_color'         => '',
+			'title'            => 'למה לבחור בנו?',
+			'columns'          => 3,
+			'card_title_size'  => '',
+			'card_text_size'   => '',
+			'icon_width'       => '',
+			'icon_height'      => '',
+			'icon_bg_visible'  => 'show',
+			'icon_bg_color'    => '',
+			'items'            => array(
 				array(
 					'title'    => 'מקצועיות',
 					'desc'     => 'צוות מוסמך עם ניסיון עשיר בכל סוגי העבודות.',
@@ -137,27 +139,31 @@ function starter_bullet_default_sections(): array {
 			'image_id' => 0,
 		),
 		'services' => array(
-			'enabled'  => 1,
-			'bg_color' => '',
-			'title'    => 'השירותים שלנו',
-			'btn_text' => 'לכל השירותים',
-			'btn_url'  => '#',
-			'count'    => 3,
+			'enabled'          => 1,
+			'bg_color'         => '',
+			'title'            => 'השירותים שלנו',
+			'title_color'      => '#FFFFFF',
+			'card_title_color' => '#000000',
+			'btn_text'         => 'לכל השירותים',
+			'btn_url'          => '#',
+			'count'            => 3,
 		),
 		'faq' => array(
-			'enabled'  => 1,
-			'bg_color' => '',
-			'title'    => 'התשובות לשאלות שלכם',
-			'content'  => 'ריכזנו עבורכם את השאלות הנפוצות ביותר. לא מצאתם תשובה? צרו קשר.',
-			'btn_text' => 'צרו קשר',
-			'btn_url'  => '#contact',
-			'count'    => 6,
+			'enabled'        => 1,
+			'bg_color'       => '',
+			'title'          => 'התשובות לשאלות שלכם',
+			'content'        => 'ריכזנו עבורכם את השאלות הנפוצות ביותר. לא מצאתם תשובה? צרו קשר.',
+			'btn_text'       => 'צרו קשר',
+			'btn_url'        => '#contact',
+			'form_shortcode' => '',
+			'count'          => 6,
 		),
 		'testimonials' => array(
 			'enabled'        => 1,
 			'bg_color'       => '',
 			'title'          => 'מה הלקוחות אומרים',
 			'subtitle'       => 'אלפי לקוחות מרוצים בוחרים בנו שוב ושוב',
+			'hide_midrag'    => 0,
 			'midrag_logo_id' => 0,
 			'midrag_score'   => '9.86',
 			'midrag_label'   => 'ציון כללי במידרג',
@@ -180,8 +186,17 @@ function starter_bullet_default_sections(): array {
 			'btn_bg_color'   => '',
 			'btn_text_color' => '',
 			'phone'          => '03-1234567',
+			'phone_lordicon' => 'https://cdn.lordicon.com/ojbonimq.json',
 		),
 	);
+
+	foreach ( $sections as $key => $fields ) {
+		if ( ! array_key_exists( 'hide_mobile', $fields ) ) {
+			$sections[ $key ]['hide_mobile'] = 0;
+		}
+	}
+
+	return $sections;
 }
 
 /**
@@ -389,7 +404,7 @@ function starter_bullet_sanitize_home_sections( array $input ): array {
 		$output[ $section_key ] = array();
 
 		foreach ( $fields as $field_key => $default_value ) {
-			if ( 'enabled' === $field_key || 'home_only' === $field_key ) {
+			if ( 'enabled' === $field_key || 'home_only' === $field_key || 'hide_mobile' === $field_key || 'hide_midrag' === $field_key ) {
 				$output[ $section_key ][ $field_key ] = ! empty( $section_input[ $field_key ] ) ? 1 : 0;
 				continue;
 			}
@@ -415,7 +430,7 @@ function starter_bullet_sanitize_home_sections( array $input ): array {
 						'desc'     => $desc,
 						'icon'     => $icon,
 						'lordicon' => sanitize_text_field( (string) ( $item['lordicon'] ?? '' ) ),
-						'url'      => esc_url_raw( (string) ( $item['url'] ?? '' ) ),
+						'url'      => starter_bullet_sanitize_link( $item['url'] ?? '' ),
 					);
 				}
 				$output[ $section_key ][ $field_key ] = $items;
@@ -428,9 +443,15 @@ function starter_bullet_sanitize_home_sections( array $input ): array {
 				continue;
 			}
 
-			if ( 'bg_color' === $field_key || 'form_bg_color' === $field_key || 'form_btn_color' === $field_key || 'number_color' === $field_key || 'label_color' === $field_key || 'btn_bg_color' === $field_key || 'btn_text_color' === $field_key ) {
+			if ( 'bg_color' === $field_key || 'form_bg_color' === $field_key || 'form_btn_color' === $field_key || 'number_color' === $field_key || 'label_color' === $field_key || 'btn_bg_color' === $field_key || 'btn_text_color' === $field_key || 'title_color' === $field_key || 'card_title_color' === $field_key ) {
 				$color = sanitize_hex_color( (string) ( $section_input[ $field_key ] ?? '' ) );
-				$output[ $section_key ][ $field_key ] = $color ? $color : '';
+				if ( 'title_color' === $field_key ) {
+					$output[ $section_key ][ $field_key ] = $color ? $color : '#FFFFFF';
+				} elseif ( 'card_title_color' === $field_key ) {
+					$output[ $section_key ][ $field_key ] = $color ? $color : '#000000';
+				} else {
+					$output[ $section_key ][ $field_key ] = $color ? $color : '';
+				}
 				continue;
 			}
 
@@ -450,7 +471,7 @@ function starter_bullet_sanitize_home_sections( array $input ): array {
 				continue;
 			}
 
-			if ( 'number_size' === $field_key || 'label_size' === $field_key ) {
+			if ( 'number_size' === $field_key || 'label_size' === $field_key || 'card_title_size' === $field_key || 'card_text_size' === $field_key ) {
 				$raw = $section_input[ $field_key ] ?? '';
 				if ( '' === $raw || null === $raw ) {
 					$output[ $section_key ][ $field_key ] = '';
@@ -490,12 +511,17 @@ function starter_bullet_sanitize_home_sections( array $input ): array {
 				continue;
 			}
 
+			if ( 'url' === $field_key || str_ends_with( $field_key, '_url' ) ) {
+				$output[ $section_key ][ $field_key ] = starter_bullet_sanitize_link( $section_input[ $field_key ] ?? '' );
+				continue;
+			}
+
 			if ( 'image_id' === $field_key || 'image_mobile_id' === $field_key || 'count' === $field_key || 'midrag_logo_id' === $field_key || 'video_file_id' === $field_key ) {
 				$output[ $section_key ][ $field_key ] = absint( $section_input[ $field_key ] ?? $default_value );
 				continue;
 			}
 
-			if ( 'cf7_shortcode' === $field_key ) {
+			if ( 'cf7_shortcode' === $field_key || 'form_shortcode' === $field_key ) {
 				$output[ $section_key ][ $field_key ] = sanitize_text_field( $section_input[ $field_key ] ?? $default_value );
 				continue;
 			}
@@ -729,14 +755,103 @@ function starter_bullet_render_icon_items_repeater( string $section, array $item
 }
 
 /**
+ * Normalize a URL for comparison (trim + strip trailing slash).
+ *
+ * @param string $url Raw URL.
+ */
+function starter_bullet_normalize_url( string $url ): string {
+	$url = trim( $url );
+
+	if ( '' === $url ) {
+		return '';
+	}
+
+	// Leave in-page anchors / special schemes alone aside from trim.
+	if ( preg_match( '/^(#|tel:|mailto:)/i', $url ) ) {
+		return $url;
+	}
+
+	return untrailingslashit( $url );
+}
+
+/**
+ * Whether two URLs point to the same destination.
+ *
+ * @param string $a First URL.
+ * @param string $b Second URL.
+ */
+function starter_bullet_urls_match( string $a, string $b ): bool {
+	$a = starter_bullet_normalize_url( $a );
+	$b = starter_bullet_normalize_url( $b );
+
+	if ( '' === $a || '' === $b ) {
+		return false;
+	}
+
+	if ( $a === $b ) {
+		return true;
+	}
+
+	$pa = wp_parse_url( $a );
+	$pb = wp_parse_url( $b );
+
+	if ( ! is_array( $pa ) || ! is_array( $pb ) ) {
+		return false;
+	}
+
+	$host_a = strtolower( (string) ( $pa['host'] ?? '' ) );
+	$host_b = strtolower( (string) ( $pb['host'] ?? '' ) );
+	$host_a = preg_replace( '/^www\./', '', $host_a );
+	$host_b = preg_replace( '/^www\./', '', $host_b );
+
+	$path_a = untrailingslashit( (string) ( $pa['path'] ?? '' ) );
+	$path_b = untrailingslashit( (string) ( $pb['path'] ?? '' ) );
+	$path_a = '' === $path_a ? '/' : $path_a;
+	$path_b = '' === $path_b ? '/' : $path_b;
+
+	$query_a = (string) ( $pa['query'] ?? '' );
+	$query_b = (string) ( $pb['query'] ?? '' );
+
+	return $host_a === $host_b && $path_a === $path_b && $query_a === $query_b;
+}
+
+/**
+ * Sanitize a CTA / button link value (http(s), anchors, tel, mailto, relative).
+ *
+ * @param mixed $value Raw value.
+ */
+function starter_bullet_sanitize_link( $value ): string {
+	$value = trim( (string) $value );
+
+	if ( '' === $value ) {
+		return '';
+	}
+
+	if ( preg_match( '/^(#|tel:|mailto:)/i', $value ) ) {
+		return sanitize_text_field( $value );
+	}
+
+	if ( str_starts_with( $value, '/' ) ) {
+		return sanitize_text_field( $value );
+	}
+
+	$sanitized = esc_url_raw( $value );
+
+	return is_string( $sanitized ) ? $sanitized : '';
+}
+
+/**
  * Render link field with source picker (pages / posts / manual URL).
  *
  * The final URL is always stored in the same text field, so the front-end
- * keeps working unchanged.
+ * keeps working unchanged. Selects use post IDs + data-url to avoid
+ * esc_url()/matching bugs that could rewrite the saved link.
  *
- * @param string $section Section key.
- * @param string $field   Field key.
- * @param string $value   Current URL value.
+ * @param string      $section Section key.
+ * @param string      $field   Field key.
+ * @param string      $value   Current URL value.
+ * @param string|null $name    Optional input name.
+ * @param string|null $id      Optional input id.
  */
 function starter_bullet_render_link_field( string $section, string $field, string $value, ?string $name = null, ?string $id = null ): void {
 	static $pages = null;
@@ -757,25 +872,27 @@ function starter_bullet_render_link_field( string $section, string $field, strin
 	$name = $name ?? sprintf( 'starter_bullet_home_sections[%s][%s]', $section, $field );
 	$id   = $id ?? ( $section . '_' . $field );
 
-	// Detect whether the saved URL points to a page or a post.
-	$source     = 'manual';
-	$normalized = untrailingslashit( $value );
+	$source           = 'manual';
+	$selected_page_id = 0;
+	$selected_post_id = 0;
 
-	$page_options = array();
 	foreach ( $pages as $page ) {
-		$permalink = untrailingslashit( (string) get_permalink( $page ) );
-		$page_options[ $permalink ] = $page->post_title;
-		if ( '' !== $normalized && $permalink === $normalized ) {
-			$source = 'page';
+		$permalink = (string) get_permalink( $page );
+		if ( starter_bullet_urls_match( $permalink, $value ) ) {
+			$source           = 'page';
+			$selected_page_id = (int) $page->ID;
+			break;
 		}
 	}
 
-	$post_options = array();
-	foreach ( $posts as $post_item ) {
-		$permalink = untrailingslashit( (string) get_permalink( $post_item ) );
-		$post_options[ $permalink ] = $post_item->post_title;
-		if ( '' !== $normalized && $permalink === $normalized && 'page' !== $source ) {
-			$source = 'post';
+	if ( 'page' !== $source ) {
+		foreach ( $posts as $post_item ) {
+			$permalink = (string) get_permalink( $post_item );
+			if ( starter_bullet_urls_match( $permalink, $value ) ) {
+				$source           = 'post';
+				$selected_post_id = (int) $post_item->ID;
+				break;
+			}
 		}
 	}
 	?>
@@ -787,16 +904,18 @@ function starter_bullet_render_link_field( string $section, string $field, strin
 		</select>
 
 		<select class="sb-link-items sb-link-items--page" style="max-width:220px;<?php echo 'page' === $source ? '' : 'display:none;'; ?>">
-			<option value=""><?php esc_html_e( '— בחרו עמוד —', 'starter-bullet' ); ?></option>
-			<?php foreach ( $page_options as $url => $title ) : ?>
-				<option value="<?php echo esc_url( $url ); ?>" <?php selected( 'page' === $source && $url === $normalized ); ?>><?php echo esc_html( $title ); ?></option>
+			<option value="" data-url=""><?php esc_html_e( '— בחרו עמוד —', 'starter-bullet' ); ?></option>
+			<?php foreach ( $pages as $page ) : ?>
+				<?php $permalink = (string) get_permalink( $page ); ?>
+				<option value="<?php echo esc_attr( (string) $page->ID ); ?>" data-url="<?php echo esc_attr( $permalink ); ?>" <?php selected( $selected_page_id, (int) $page->ID ); ?>><?php echo esc_html( $page->post_title ); ?></option>
 			<?php endforeach; ?>
 		</select>
 
 		<select class="sb-link-items sb-link-items--post" style="max-width:220px;<?php echo 'post' === $source ? '' : 'display:none;'; ?>">
-			<option value=""><?php esc_html_e( '— בחרו פוסט —', 'starter-bullet' ); ?></option>
-			<?php foreach ( $post_options as $url => $title ) : ?>
-				<option value="<?php echo esc_url( $url ); ?>" <?php selected( 'post' === $source && $url === $normalized ); ?>><?php echo esc_html( $title ); ?></option>
+			<option value="" data-url=""><?php esc_html_e( '— בחרו פוסט —', 'starter-bullet' ); ?></option>
+			<?php foreach ( $posts as $post_item ) : ?>
+				<?php $permalink = (string) get_permalink( $post_item ); ?>
+				<option value="<?php echo esc_attr( (string) $post_item->ID ); ?>" data-url="<?php echo esc_attr( $permalink ); ?>" <?php selected( $selected_post_id, (int) $post_item->ID ); ?>><?php echo esc_html( $post_item->post_title ); ?></option>
 			<?php endforeach; ?>
 		</select>
 
@@ -892,6 +1011,16 @@ function starter_bullet_home_settings_page_html(): void {
 
 					<table class="form-table" role="presentation" style="display:none;">
 						<tr><th><?php esc_html_e( 'צבע רקע', 'starter-bullet' ); ?></th><td><?php starter_bullet_render_color_field( $section_key, 'bg_color', (string) ( $data['bg_color'] ?? '' ) ); ?></td></tr>
+						<tr>
+							<th><?php esc_html_e( 'תצוגה במובייל', 'starter-bullet' ); ?></th>
+							<td>
+								<label>
+									<input type="checkbox" name="starter_bullet_home_sections[<?php echo esc_attr( $section_key ); ?>][hide_mobile]" value="1" <?php checked( ! empty( $data['hide_mobile'] ) ); ?>>
+									<?php esc_html_e( 'הסתר במובייל', 'starter-bullet' ); ?>
+								</label>
+								<p class="description"><?php esc_html_e( 'כשמסומן — הסקשן יוסתר במסכים קטנים בלבד ויוצג בדסקטופ כרגיל.', 'starter-bullet' ); ?></p>
+							</td>
+						</tr>
 						<?php if ( 'hero' === $section_key ) : ?>
 							<tr><th><?php esc_html_e( 'כותרת', 'starter-bullet' ); ?></th><td><?php starter_bullet_render_field( $section_key, 'title', (string) $data['title'] ); ?></td></tr>
 							<tr><th><?php esc_html_e( 'תת-כותרת', 'starter-bullet' ); ?></th><td><?php starter_bullet_render_field( $section_key, 'subtitle', (string) $data['subtitle'], 'textarea' ); ?></td></tr>
@@ -985,6 +1114,14 @@ function starter_bullet_home_settings_page_html(): void {
 								</select>
 								<p class="description"><?php esc_html_e( 'כמות העמודות בדסקטופ. במובייל תמיד עמודה אחת.', 'starter-bullet' ); ?></p>
 							</td></tr>
+							<tr><th><?php esc_html_e( 'גודל כותרת בכרטיס', 'starter-bullet' ); ?></th><td>
+								<input type="number" name="starter_bullet_home_sections[features][card_title_size]" value="<?php echo esc_attr( (string) ( $data['card_title_size'] ?? '' ) ); ?>" min="10" max="96" step="1" style="width:80px;" placeholder="18"> px
+								<p class="description"><?php esc_html_e( 'השאירו ריק לברירת מחדל (כ־18px). חל על כל הכרטיסיות.', 'starter-bullet' ); ?></p>
+							</td></tr>
+							<tr><th><?php esc_html_e( 'גודל טקסט בכרטיס', 'starter-bullet' ); ?></th><td>
+								<input type="number" name="starter_bullet_home_sections[features][card_text_size]" value="<?php echo esc_attr( (string) ( $data['card_text_size'] ?? '' ) ); ?>" min="10" max="96" step="1" style="width:80px;" placeholder="14"> px
+								<p class="description"><?php esc_html_e( 'השאירו ריק לברירת מחדל (כ־14px). חל על כל הכרטיסיות.', 'starter-bullet' ); ?></p>
+							</td></tr>
 							<?php starter_bullet_render_icon_style_fields( $section_key, $data ); ?>
 							<tr><th><?php esc_html_e( 'כרטיסים', 'starter-bullet' ); ?></th><td>
 								<?php starter_bullet_render_icon_items_repeater( $section_key, is_array( $data['items'] ?? null ) ? $data['items'] : array(), false ); ?>
@@ -993,6 +1130,16 @@ function starter_bullet_home_settings_page_html(): void {
 							<tr><th><?php esc_html_e( 'כותרת', 'starter-bullet' ); ?></th><td><?php starter_bullet_render_field( $section_key, 'title', (string) $data['title'] ); ?></td></tr>
 							<tr><th><?php esc_html_e( 'תת-כותרת', 'starter-bullet' ); ?></th><td><?php starter_bullet_render_field( $section_key, 'subtitle', (string) $data['subtitle'] ); ?></td></tr>
 							<tr><th colspan="2"><strong><?php esc_html_e( 'מידרג', 'starter-bullet' ); ?></strong></th></tr>
+							<tr>
+								<th><?php esc_html_e( 'הצגת מידרג', 'starter-bullet' ); ?></th>
+								<td>
+									<label>
+										<input type="checkbox" name="starter_bullet_home_sections[<?php echo esc_attr( $section_key ); ?>][hide_midrag]" value="1" <?php checked( ! empty( $data['hide_midrag'] ) ); ?>>
+										<?php esc_html_e( 'הסתר מידע מידרג', 'starter-bullet' ); ?>
+									</label>
+									<p class="description"><?php esc_html_e( 'כשמסומן — מוסתרים הלוגו, הציון, הכותרת וכמות חוות הדעת של מידרג.', 'starter-bullet' ); ?></p>
+								</td>
+							</tr>
 							<tr><th><?php esc_html_e( 'מידרג — לוגו', 'starter-bullet' ); ?></th><td><?php starter_bullet_render_image_field( $section_key, 'midrag_logo_id', (int) ( $data['midrag_logo_id'] ?? 0 ) ); ?></td></tr>
 							<tr><th><?php esc_html_e( 'מידרג — ציון', 'starter-bullet' ); ?></th><td><?php starter_bullet_render_field( $section_key, 'midrag_score', (string) ( $data['midrag_score'] ?? '' ) ); ?></td></tr>
 							<tr><th><?php esc_html_e( 'מידרג — כותרת', 'starter-bullet' ); ?></th><td><?php starter_bullet_render_field( $section_key, 'midrag_label', (string) ( $data['midrag_label'] ?? '' ) ); ?></td></tr>
@@ -1001,6 +1148,10 @@ function starter_bullet_home_settings_page_html(): void {
 							<tr><td colspan="2"><em><?php esc_html_e( 'הפריטים נמשכים אוטומטית מה-CPT המתאים.', 'starter-bullet' ); ?></em></td></tr>
 						<?php elseif ( in_array( $section_key, array( 'services', 'faq', 'blog' ), true ) ) : ?>
 							<tr><th><?php esc_html_e( 'כותרת', 'starter-bullet' ); ?></th><td><?php starter_bullet_render_field( $section_key, 'title', (string) $data['title'] ); ?></td></tr>
+							<?php if ( 'services' === $section_key ) : ?>
+								<tr><th><?php esc_html_e( 'צבע הכותרת', 'starter-bullet' ); ?></th><td><?php starter_bullet_render_color_field( $section_key, 'title_color', (string) ( $data['title_color'] ?? '#FFFFFF' ) ); ?></td></tr>
+								<tr><th><?php esc_html_e( 'צבע כותרת בכרטיס', 'starter-bullet' ); ?></th><td><?php starter_bullet_render_color_field( $section_key, 'card_title_color', (string) ( $data['card_title_color'] ?? '#000000' ) ); ?></td></tr>
+							<?php endif; ?>
 							<?php if ( isset( $data['subtitle'] ) ) : ?>
 								<tr><th><?php esc_html_e( 'תת-כותרת', 'starter-bullet' ); ?></th><td><?php starter_bullet_render_field( $section_key, 'subtitle', (string) $data['subtitle'] ); ?></td></tr>
 							<?php endif; ?>
@@ -1009,6 +1160,15 @@ function starter_bullet_home_settings_page_html(): void {
 							<?php endif; ?>
 							<?php if ( isset( $data['btn_text'] ) ) : ?>
 								<tr><th><?php esc_html_e( 'כפתור', 'starter-bullet' ); ?></th><td><?php starter_bullet_render_field( $section_key, 'btn_text', (string) $data['btn_text'] ); ?><div style="margin-top:6px;"><?php starter_bullet_render_link_field( $section_key, 'btn_url', (string) $data['btn_url'] ); ?></div></td></tr>
+							<?php endif; ?>
+							<?php if ( 'faq' === $section_key ) : ?>
+								<tr>
+									<th><?php esc_html_e( 'שורטקוד מתחת לכפתור', 'starter-bullet' ); ?></th>
+									<td>
+										<?php starter_bullet_render_field( $section_key, 'form_shortcode', (string) ( $data['form_shortcode'] ?? '' ) ); ?>
+										<p class="description"><?php esc_html_e( 'לדוגמה שורטקוד של Contact Form 7. מוצג מתחת לטקסט והכפתור בצד ימין.', 'starter-bullet' ); ?></p>
+									</td>
+								</tr>
 							<?php endif; ?>
 							<tr><th><?php esc_html_e( 'כמות פריטים', 'starter-bullet' ); ?></th><td><?php starter_bullet_render_field( $section_key, 'count', (string) $data['count'], 'number' ); ?></td></tr>
 							<tr><td colspan="2"><em><?php esc_html_e( 'הפריטים נמשכים אוטומטית מה-CPT המתאים.', 'starter-bullet' ); ?></em></td></tr>
@@ -1026,6 +1186,13 @@ function starter_bullet_home_settings_page_html(): void {
 							</tr>
 							<tr><th><?php esc_html_e( 'כותרת', 'starter-bullet' ); ?></th><td><?php starter_bullet_render_field( $section_key, 'title', (string) $data['title'] ); ?></td></tr>
 							<tr><th><?php esc_html_e( 'טלפון', 'starter-bullet' ); ?></th><td><?php starter_bullet_render_field( $section_key, 'phone', (string) $data['phone'] ); ?></td></tr>
+							<tr>
+								<th><?php esc_html_e( 'אייקון Lordicon ליד הטלפון', 'starter-bullet' ); ?></th>
+								<td>
+									<?php starter_bullet_render_field( $section_key, 'phone_lordicon', (string) ( $data['phone_lordicon'] ?? '' ) ); ?>
+									<p class="description"><?php esc_html_e( 'הדביקו קישור JSON מ-lordicon.com או רק את המזהה. האייקון יופיע משמאל למספר בתוך הכפתור. השאירו ריק בלי אייקון.', 'starter-bullet' ); ?></p>
+								</td>
+							</tr>
 							<tr><th><?php esc_html_e( 'טקסט כפתור', 'starter-bullet' ); ?></th><td><?php starter_bullet_render_field( $section_key, 'btn_text', (string) $data['btn_text'] ); ?></td></tr>
 							<tr><th><?php esc_html_e( 'צבע רקע הכפתור', 'starter-bullet' ); ?></th><td><?php starter_bullet_render_color_field( $section_key, 'btn_bg_color', (string) ( $data['btn_bg_color'] ?? '' ) ); ?></td></tr>
 							<tr><th><?php esc_html_e( 'צבע טקסט הכפתור', 'starter-bullet' ); ?></th><td><?php starter_bullet_render_color_field( $section_key, 'btn_text_color', (string) ( $data['btn_text_color'] ?? '' ) ); ?></td></tr>

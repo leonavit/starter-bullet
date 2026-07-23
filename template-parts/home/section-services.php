@@ -10,6 +10,11 @@ declare(strict_types=1);
 $d     = sb_get_section( 'services' );
 $count = max( 1, min( 12, (int) ( $d['count'] ?? 3 ) ) );
 
+$title_color = sanitize_hex_color( (string) ( $d['title_color'] ?? '' ) );
+if ( ! $title_color ) {
+	$title_color = '#FFFFFF';
+}
+
 $query = new WP_Query(
 	array(
 		'post_type'      => 'bullet_service',
@@ -20,10 +25,10 @@ $query = new WP_Query(
 	)
 );
 ?>
-<section id="services" class="sb-blue-gradient text-white"<?php echo sb_section_bg_style( 'services' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+<section id="services" class="sb-blue-gradient text-white <?php echo esc_attr( sb_section_hide_mobile_class( 'services' ) ); ?>"<?php echo sb_section_bg_style( 'services' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 	<div class="mx-auto max-w-7xl px-4 lg:px-8">
-		<div class="mb-10 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-			<h2 class="text-3xl font-extrabold sm:text-4xl"><?php echo esc_html( (string) $d['title'] ); ?></h2>
+		<div class="mb-10 flex flex-col items-center justify-between gap-4 text-center md:flex-row md:items-center md:text-start">
+			<h2 class="text-3xl font-extrabold sm:text-4xl" style="color:<?php echo esc_attr( $title_color ); ?>"><?php echo esc_html( (string) $d['title'] ); ?></h2>
 			<?php if ( trim( (string) ( $d['btn_text'] ?? '' ) ) !== '' ) : ?>
 				<a href="<?php echo esc_url( (string) $d['btn_url'] ); ?>" class="rounded-full bg-accent-yellow px-6 py-3 text-sm font-bold text-navy transition hover:bg-yellow-300">
 					<?php echo esc_html( (string) $d['btn_text'] ); ?>

@@ -19,7 +19,7 @@ $icon_box    = max( $iw, $ih ) + 28;
 $cols        = min( 4, max( 1, count( $items ) ) );
 $grid_class  = 1 === $cols ? 'grid-cols-1' : ( 2 === $cols ? 'md:grid-cols-2' : ( 4 === $cols ? 'md:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-3' ) );
 ?>
-<section class="sb-benefits-bar text-white"<?php echo sb_section_bg_style( 'benefits' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+<section class="sb-benefits-bar text-white <?php echo esc_attr( sb_section_hide_mobile_class( 'benefits' ) ); ?>"<?php echo sb_section_bg_style( 'benefits' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 	<div class="mx-auto grid max-w-7xl grid-cols-1 divide-y divide-white/20 px-4 <?php echo esc_attr( $grid_class ); ?> md:divide-x md:divide-y-0 md:divide-x-reverse lg:px-8">
 		<?php foreach ( $items as $item ) : ?>
 			<?php

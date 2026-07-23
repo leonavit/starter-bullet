@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 $d = sb_get_section( 'secondary' );
 ?>
-<section class="bg-white py-16 lg:py-20"<?php echo sb_section_bg_style( 'secondary' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+<section class="bg-white py-16 lg:py-20 <?php echo esc_attr( sb_section_hide_mobile_class( 'secondary' ) ); ?>"<?php echo sb_section_bg_style( 'secondary' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 	<div class="mx-auto grid max-w-7xl items-center gap-10 px-4 lg:grid-cols-2 lg:px-8">
 		<div class="sb-section" data-skeleton>
 			<h2 class="text-3xl font-extrabold text-navy sm:text-4xl"><?php echo esc_html( (string) $d['title'] ); ?></h2>

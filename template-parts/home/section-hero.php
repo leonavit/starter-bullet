@@ -30,7 +30,7 @@ if ( 'video' === $bg_type ) {
 	}
 }
 ?>
-<section id="hero" class="relative overflow-hidden text-white <?php echo $transparent_header ? 'hero--transparent-header' : 'bg-navy'; ?>"<?php echo sb_section_bg_style( 'hero' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+<section id="hero" class="relative overflow-hidden text-white <?php echo $transparent_header ? 'hero--transparent-header' : 'bg-navy'; ?> <?php echo esc_attr( sb_section_hide_mobile_class( 'hero' ) ); ?>"<?php echo sb_section_bg_style( 'hero' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 	<?php if ( 'video' === $bg_type ) : ?>
 		<?php if ( $bg_mobile ) : ?>
 			<div class="hero-bg absolute inset-0 bg-cover bg-center md:hidden" style="background-image:url('<?php echo esc_url( $bg_mobile ); ?>')"></div>
@@ -73,7 +73,7 @@ if ( 'video' === $bg_type ) {
 	<?php endif; ?>
 
 	<div class="hero-content relative z-10 mx-auto grid max-w-7xl items-center gap-10 px-4 pb-14 lg:grid-cols-2 lg:gap-12 lg:px-8 lg:pb-20 <?php echo $transparent_header ? '' : 'pt-14 lg:pt-20'; ?>">
-		<div class="sb-section" data-skeleton>
+		<div class="sb-section text-center md:text-start" data-skeleton>
 			<h1 class="text-3xl font-extrabold leading-tight sm:text-4xl lg:text-5xl">
 				<?php echo esc_html( (string) $d['title'] ); ?>
 			</h1>
@@ -85,7 +85,7 @@ if ( 'video' === $bg_type ) {
 			$btn_secondary_text = trim( (string) ( $d['btn_secondary_text'] ?? '' ) );
 			?>
 			<?php if ( $btn_primary_text !== '' || $btn_secondary_text !== '' ) : ?>
-				<div class="mt-8 flex flex-wrap gap-4">
+				<div class="mt-8 flex flex-wrap justify-center gap-4 md:justify-start">
 					<?php if ( $btn_primary_text !== '' ) : ?>
 						<a href="<?php echo esc_url( (string) $d['btn_primary_url'] ); ?>" class="rounded-full bg-accent-yellow px-6 py-3 text-sm font-bold text-navy transition hover:bg-yellow-300">
 							<?php echo esc_html( $btn_primary_text ); ?>

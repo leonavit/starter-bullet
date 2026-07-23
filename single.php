@@ -19,7 +19,9 @@ while ( have_posts() ) :
 		<?php endif; ?>
 		<div class="page-hero__overlay"></div>
 		<div class="page-hero__inner">
-			<p class="page-hero__meta"><?php echo esc_html( get_the_date() ); ?></p>
+			<?php if ( 'show' === sb_get_site_option( 'post_date_visible', 'hide' ) ) : ?>
+				<p class="page-hero__meta"><?php echo esc_html( get_the_date() ); ?></p>
+			<?php endif; ?>
 			<h1 class="page-hero__title"><?php the_title(); ?></h1>
 		</div>
 	</section>
